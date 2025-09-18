@@ -1,0 +1,44 @@
+<%- include('../partials/header') %>
+
+    <div class="card shadow-sm">
+        
+        <div class="row g-0">
+            <div class="col-md-4">
+                <% if (product.imageUrl) { %>
+                        <img src="/<%= product.imageUrl %>" class="img-fluid rounded" alt="<%= product.name %>" width="200">
+                <% } else { %>
+                        <img src="https://via.placeholder.com/400x300" class="img-fluid rounded" alt="No image available">
+                <% } %>
+
+                
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h1 class="card-title display-5"><%= product.name %></h1>
+                    <h2 class="card-subtitle mb-2 text-muted">Price: <%= product.price %> บาท</h2>
+                    <p class="card-text"><small class="text-muted">Created At: <%= product.createdAt.toDateString() %> | Listed by: <%= product.owner.username %></small></p>
+
+
+                    <% if (product.owner && product.owner.contactLink) { %>
+                        <a href="<%= product.owner.contactLink %>" class="btn btn-info" target="_blank">Contact Seller</a>
+                    <% } %>
+                    
+                    <hr>
+                    <a href="/products" class="btn btn-secondary">Back to all products</a>
+                    <% if (locals.user && product.owner && product.owner.equals(user._id)) { %>
+                        <a href="/products/<%= product._id %>/edit" class="btn btn-warning">Edit this product</a>
+                    <% } %>   
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="/" class="btn btn-secondary">Back to index</a>
+    </div>
+
+    
+    
+    
+
+<%- include('../partials/footer') %>

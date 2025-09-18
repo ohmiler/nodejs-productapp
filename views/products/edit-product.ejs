@@ -1,0 +1,33 @@
+<%- include('../partials/header') %>
+    <h1 class="display-5 mb-4">Edit <%= product.name %></h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form action="/products/<%= product._id %>?_method=PUT" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="name">Product name:</label>
+                    <input type="text" name="name" value="<%= product.name %>" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="price">Price:</label>
+                    <input type="number" name="price" value="<%= product.price %>" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="productImage">Upload New Image:</label>
+                    <input type="file" name="productImage" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <h3>Image</h3>
+                    <% if (product.imageUrl) { %>
+                        <img src="/<%= product.imageUrl %>" alt="<%= product.name %>" class="img-thumbnail" width="200">
+                    <% } else { %>
+                        <p>No image available.</p>
+                    <% } %>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Product</button>
+                <a href="/products" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </div>
+
+<%- include('../partials/footer') %>

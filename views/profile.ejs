@@ -1,0 +1,32 @@
+<%- include('partials/header') %>
+
+<h1 class="display-5 mb-4">My Profile</h1>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form action="/profile" method="POST">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" value="<%= user.username %>" disabled>
+                <div class="form-text">Username cannot be changed.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="contactLink" class="form-label">Contact Link (Social Media, Facebook, Link, etc.)</label>
+                <input type="url" name="contactLink" class="form-control" value="<%= user.contactLink || '' %>" placeholder="https://www.facebook.com/yourprofile">
+                <div class="form-text">Please provide a full URL. This link will be visible to potential buyers on your product pages.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+
+        <hr class="my-4">
+
+        <div>
+            <h5>Security</h5>
+            <a href="/profile/change-password" class="btn btn-outline-danger">Change My Password</a>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,54 @@
+<%- include('../partials/header') %>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5">Our Products</h1>
+        <a href="/products/new" class="btn btn-success">Add new product</a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">Image</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <% products.forEach(product => { %>
+                        <tr>
+                            <td>
+                                <% if (product.imageUrl) { %>
+                                    <img src="/<%= product.imageUrl %>" alt="<%= product.name %>" height="300">
+                                <% } %>
+                            </td>
+                            <td>
+                                <%= product.name %>
+                            </td>
+                            <td>
+                                <%= product.price %> บาท
+                            </td>
+                            <td>
+                                <a href="/products/<%= product._id %>" class="btn btn-primary btn-sm">View</a>
+                                <% if (user && product.owner && product.owner.equals(user._id)) { %>
+                                <a href="/products/<%= product._id %>/edit" class="btn btn-warning btn-sm">Edit</a>
+                                <form action="/products/<%= product._id %>?_method=DELETE" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                                <% } %>
+                            </td>
+                        </li>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <%- include('../partials/pagination') %>
+    </div>
+
+<%- include('../partials/footer') %>
