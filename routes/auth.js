@@ -72,31 +72,35 @@ router.get('/forgot-password', (req, res) => {
 
 router.post('/forgot-password', async (req, res) => {
     try {
-        const { email } = req.body
-        const user = await User.findOne({ email: email })
+        console.log("Log 1: Received forgot password request..."); 
+        const { email } = req.body;
+        const user = await User.findOne({ email: email });
 
         if (!user) {
-            req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.')
-            return res.redirect('/auth/forgot-password')
+            console.log("Log 2: User not found for email:", email); 
+            req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.');
+            return res.redirect('/auth/forgot-password');
         }
 
-        const token = crypto.randomBytes(20).toString('hex')
+        console.log("Log 3: User found. Generating token..."); 
+        const token = crypto.randomBytes(20).toString('hex');
+        user.passwordResetToken = token;
+        user.passwordResetExpires = Date.now() + 3600000;
+        await user.save();
 
-        user.passwordResetToken = token 
-        user.passwordResetExpires = Date.now() + 3600000
-        await user.save()
-        
-        await sendResetEmail(user.email, token)
+        console.log("Log 4: Token generated. Attempting to send email..."); 
+        await sendResetEmail(user.email, token);
+        console.log("Log 5: Email function finished. Sending response."); 
 
-        req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.')
-        res.redirect('/auth/forgot-password')
+        req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.');
+        res.redirect('/auth/forgot-password');
 
-    } catch(error) {
-        req.flash('error_msg', 'Something went wrong.')
-        res.redirect('/auth/forgot-password')
+    } catch (error) {
+        console.error("!!! Critical Error in forgot-password route:", error);
+        req.flash('error_msg', 'Something went wrong.');
+        res.redirect('/auth/forgot-password');
     }
-})
-
+});
 router.get('/reset-password/:token', async (req, res) => {
     try {
         const token = req.params.token
