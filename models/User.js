@@ -8,6 +8,13 @@ const userSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true
+    },
     password: {
         type: String,
         required: true
@@ -15,7 +22,9 @@ const userSchema = new mongoose.Schema({
     contactLink: {
         type: String,
         trim: true
-    }
+    },
+    passwordResetToken: String,
+    passwordResetExpires: Date
 })
 
 userSchema.pre('save', async function(next) {

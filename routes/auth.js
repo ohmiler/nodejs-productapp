@@ -3,6 +3,8 @@ const router = express.Router()
 const User = require('../models/User')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const crypto = require('crypto')
+const { sendResetEmail } = require('../config/mailer')
 
 router.get('/register', (req, res) => {
     res.render('register')
@@ -10,9 +12,17 @@ router.get('/register', (req, res) => {
 
 router.post('/register', async (req, res) => {
     try {
-        const { username, password } = req.body
-        const user = new User({ username, password })
+        const { username, email, password } = req.body
+
+        const existingUser = await User.findOne({ $or: [{ username: username }, { email: email }] })
+        if (existingUser) {
+            req.flash('error_msg', 'Username or email already in use. Please choose another.')
+            return res.redirect('/auth/register')
+        }
+
+        const user = new User({ username, email, password })
         await user.save()
+
         req.flash('success_msg', 'You are now registered and can log in')
         res.redirect('/auth/login')
     } catch(error) {
@@ -56,11 +66,95 @@ router.post('/login', async (req, res) => {
     }
 })
 
+router.get('/forgot-password', (req, res) => {
+    res.render('forgot-password')
+})
+
+router.post('/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body
+        const user = await User.findOne({ email: email })
+
+        if (!user) {
+            req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.')
+            return res.redirect('/auth/forgot-password')
+        }
+
+        const token = crypto.randomBytes(20).toString('hex')
+
+        user.passwordResetToken = token 
+        user.passwordResetExpires = Date.now() + 3600000
+        await user.save()
+        
+        await sendResetEmail(user.email, token)
+
+        req.flash('success_msg', 'If an account with that email exists, a password reset link has been sent.')
+        res.redirect('/auth/forgot-password')
+
+    } catch(error) {
+        req.flash('error_msg', 'Something went wrong.')
+        res.redirect('/auth/forgot-password')
+    }
+})
+
+router.get('/reset-password/:token', async (req, res) => {
+    try {
+        const token = req.params.token
+        const user = await User.findOne({ 
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        })
+
+        if (!user) {
+            req.flash('error_msg', 'Password reset token is invalid or has expired.')
+            return res.redirect('/auth/forgot-password')
+        }
+
+        res.render('reset-password', { token: token })
+
+    } catch(error) {
+        req.flash('error_msg', 'Something went wrong')
+        res.redirect('/auth/forgot-password')
+    }
+})
+
+router.post('/reset-password/:token', async (req, res) => {
+    try {
+        const token = req.params.token
+        const user = await User.findOne({ 
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        })
+
+        if (!user) {
+            req.flash('error_msg', 'Password reset token is invalid or has expired.')
+            return res.redirect('/auth/forgot-password')
+        }
+
+        const { password, confirmPassword } = req.body
+        if (password !== confirmPassword) {
+            req.flash('error_msg', 'Passwords do not match.')
+            return res.redirect(`/auth/reset-password/${token}`)
+        }
+
+        user.password = password
+        user.passwordResetToken = undefined
+        user.passwordResetExpires = undefined
+        await user.save()
+
+        req.flash('success_msg', 'Password has been updated successfully. Please log in.')
+        res.redirect('/auth/login')
+
+    } catch(error) {
+        req.flash('error_msg', 'Something went wrong')
+        res.redirect('/auth/forgot-password')
+    }
+})
+
 router.get('/logout', (req, res) => {
     res.clearCookie('token')
     req.flash('success_msg', 'You have been logged out.')
     res.redirect('/auth/login')
 })
-
 
 module.exports = router
