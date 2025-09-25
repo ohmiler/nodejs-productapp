@@ -1,50 +1,32 @@
-const nodemailer = require('nodemailer')
+const sgMail = require('@sendgrid/mail')
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    }
-})
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 const sendResetEmail = async (to, token) => {
-    const resetUrl = `${process.env.BASE_URL}/auth/reset-password/${token}`;
-    
-    const mailOptions = {
-        from: `ProductApp <${process.env.EMAIL_USER}>`, // Recommended to have a name
+    const resetUrl = `${process.env.BASE_URL}/auth/reset-password/${token}`
+
+    const msg = {
+        from: process.env.SENDER_EMAIL,
         to: to,
-        subject: 'Password Reset Request',
+        subject: 'Password Reset Request for Your ProductApp Account',
         html: `
-            <p>You requested a password reset.</p>
-            <p>Click this <a href="${resetUrl}">link</a> to set a new password.</p>
+            <p>You are receiving this because you have requested the reset of the password for your account.</p>
+            <p>Please click on the following link, or paste this into your browser to complete the process:</p>
+            <p><a href="${resetUrl}">${resetUrl}</a></p>
             <p>This link will expire in one hour.</p>
-        `,
-    };
+            <p>IF you did not request this, please ignore this email and your password will remain unchanged.</p>
+        `
+    }
 
     try {
-        console.log(`Attempting to send email to: ${to}`);
-        let info = await transporter.sendMail(mailOptions);
-        
-        console.log('Email sent successfully!');
-        console.log('Message ID:', info.messageId);
-        console.log('Preview URL:', nodemailer.getTestMessageUrl(info)); // Won't work with Gmail but good practice
-        
-        // ตรวจสอบว่า Gmail ตอบรับอีเมลหรือไม่
-        if (info.accepted && info.accepted.includes(to)) {
-            console.log('Recipient email was accepted by the server.');
-        }
-        if (info.rejected && info.rejected.length > 0) {
-            console.error('Recipient email was rejected by the server:', info.rejected);
+        await sgMail.send(msg)
+    } catch(error) {
+        if (error.response) {
+            console.error(error.response.body)
         }
 
-    } catch (error) {
-        console.error('!!! Error sending email via Nodemailer:', error);
-        // re-throw the error so the calling route's catch block can see it
-        throw error; 
+        throw error
     }
-};
+}
 
-module.exports = { sendResetEmail };
+module.exports = { sendResetEmail }
